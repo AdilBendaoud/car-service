@@ -1,0 +1,35 @@
+server:
+  port: 8082
+
+spring:
+  cloud:
+    consul:
+      host: ${SPRING_CLOUD_CONSUL_HOST}
+      port: ${SPRING_CLOUD_CONSUL_PORT}
+      discovery:
+        prefer-ip-address: true
+        service-name: SERVICE-CAR
+  application:
+    name: SERVICE-CAR
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "jdbc:mysql://mysql:3306/carservicedb?createDatabaseIfNotExist=true"
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

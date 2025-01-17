@@ -1,0 +1,60 @@
+version: '3.8'
+
+name: microservices
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "8083:80"
+    networks:
+      - app-network
+
+  consul:
+    image: consul:1.15.4
+    ports:
+      - "8500:8500"
+    networks:
+      - app-network
+
+  service-car:
+    build:
+      context: ./
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    networks:
+      - app-network
+    environment:
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/carservicedb?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+
+networks:
+  app-network:
+    driver: bridge
